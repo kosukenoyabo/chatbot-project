@@ -11,10 +11,12 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-// --- uploads ディレクトリの確認・作成 ---
-// process.cwd() を基準に uploads ディレクトリへのパスを生成
+// --- プロジェクトルートの定義 (一度だけ宣言) ---
 const projectRoot = process.cwd();
-const uploadsDirectory = path.join(projectRoot, 'uploads');
+console.log(`Project root directory: ${projectRoot}`); // ルート確認ログ
+
+// --- uploads ディレクトリの確認・作成 ---
+const uploadsDirectory = path.join(projectRoot, 'uploads'); // projectRoot を使用
 console.log(`Checking for uploads directory at: ${uploadsDirectory}`); // パス確認ログ
 if (!fs.existsSync(uploadsDirectory)) {
   try {
@@ -32,9 +34,7 @@ if (!fs.existsSync(uploadsDirectory)) {
 // --- ミドルウェア設定 ---
 
 // 静的ファイルを提供 (public ディレクトリ)
-// process.cwd() (プロジェクトルート) を基準にする方法に変更
-const projectRoot = process.cwd(); // Render環境では /opt/render/project/src/ になるはず
-const publicDirectoryPath = path.join(projectRoot, 'public'); // プロジェクトルート直下の public を指定
+const publicDirectoryPath = path.join(projectRoot, 'public'); // projectRoot を使用
 console.log(`Serving static files from (using cwd): ${publicDirectoryPath}`); // ログメッセージ変更
 app.use(express.static(publicDirectoryPath)); // 修正後のパスを使用
 

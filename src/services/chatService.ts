@@ -193,7 +193,7 @@ export async function getThreadHistory(threadId: string): Promise<OpenAI.Beta.Th
     }
 }
 
-export const sendMessageToAssistant = async (threadId: string, message: string, fileId?: string): Promise<OpenAI.Beta.Threads.Messages.ThreadMessage[]> => {
+export const sendMessageToAssistant = async (threadId: string, message: string, fileId?: string): Promise<OpenAI.Beta.Threads.Messages.Message[]> => {
   try {
     let fileUploadId: string | undefined = undefined;
 
