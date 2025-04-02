@@ -1,7 +1,8 @@
 // src/index.ts
 import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
-import path from 'path'; // path モジュールをインポート
+import path from 'path';
+import fs from 'fs'; // fsモジュールが必要な場合は残す (uploadsディレクトリ作成など)
 import chatRoutes from './routes/chat';
 import uploadRoutes from './routes/upload';
 
@@ -10,13 +11,19 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
+// --- uploads ディレクトリの確認・作成 (必要であれば残す) ---
+// const uploadsDirectory = path.resolve(__dirname, '../uploads');
+// ... (ディレクトリ作成処理) ...
+
+
 // --- ミドルウェア設定 ---
 
 // 静的ファイルを提供 (public ディレクトリ)
-// dist/index.js から見て '../public' が正しい相対パス
-const publicDirectoryPath = path.resolve(__dirname, '../public'); // パスを修正
-console.log(`Serving static files from: ${publicDirectoryPath}`); // パスを確認するためのログ
-app.use(express.static(publicDirectoryPath));
+// process.cwd() (プロジェクトルート) を基準にする方法に変更
+const projectRoot = process.cwd(); // Render環境では /opt/render/project/src/ になるはず
+const publicDirectoryPath = path.join(projectRoot, 'public'); // プロジェクトルート直下の public を指定
+console.log(`Serving static files from (using cwd): ${publicDirectoryPath}`); // ログメッセージ変更
+app.use(express.static(publicDirectoryPath)); // 修正後のパスを使用
 
 // JSONリクエストボディをパース
 app.use(express.json());
