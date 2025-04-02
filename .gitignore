@@ -1,0 +1,20 @@
+# 依存関係
+node_modules/
+
+# ビルド成果物 (デプロイ先でビルドする場合)
+# dist/ # 必要に応じてコメントアウト解除
+# public/script.js # 必要に応じてコメントアウト解除
+# public/script.js.map # 必要に応じてコメントアウト解除
+
+# 環境変数ファイル
+.env
+
+# OS固有ファイル
+.DS_Store
+Thumbs.db
+
+# ログファイル
+*.log
+
+# 一時ファイル (例: uploads ディレクトリ)
+# uploads/ # デプロイ戦略による (後述) 

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>チャットボット</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chatbox">
+            <!-- チャットメッセージがここに追加されます -->
+        </div>
+        <div id="input-area">
+            <input type="text" id="message-input" placeholder="メッセージを入力...">
+            <button id="upload-button" title="PDFファイルをアップロード">📎</button>
+            <input type="file" id="file-input" accept=".pdf" style="display: none;">
+            <button id="send-button">送信</button>
+        </div>
+        <div id="file-info">
+            選択中のファイル: <span id="selected-file">なし</span>
+            <button id="clear-file-button" style="display: none;">×</button>
+        </div>
+        <div id="loading" style="display: none;">処理中...</div>
+        <div id="error-message" style="color: red;"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
