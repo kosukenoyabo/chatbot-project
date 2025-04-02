@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import OpenAI from 'openai'; // OpenAI SDKをインポート
 import dotenv from 'dotenv'; // dotenvをインポート
 import fs from 'fs'; // ファイルシステムモジュールを追加
+import path from 'path'; // path モジュールをインポート
 // import { Readable } from 'stream'; // Readable は不要になる
 
 dotenv.config(); // 環境変数をロード
@@ -191,4 +192,91 @@ export async function getThreadHistory(threadId: string): Promise<OpenAI.Beta.Th
         throw new Error('メッセージ履歴の取得に失敗しました。');
     }
 }
+
+export const sendMessageToAssistant = async (threadId: string, message: string, fileId?: string): Promise<OpenAI.Beta.Threads.Messages.ThreadMessage[]> => {
+  try {
+    let fileUploadId: string | undefined = undefined;
+
+    if (fileId) {
+      // process.cwd() (プロジェクトルート) を基準に uploads ディレクトリ内のファイルパスを生成
+      const filePath = path.join(process.cwd(), 'uploads', fileId); // 修正
+      console.log(`Attempting to read file for OpenAI upload from: ${filePath}`); // デバッグログ
+
+      // ファイルが存在するか確認
+      if (!fs.existsSync(filePath)) {
+          console.error(`File not found at path: ${filePath}. User provided fileId: ${fileId}`);
+          // ユーザーに分かりやすいエラーを返す
+          throw new Error(`アップロードされたファイルが見つかりません (${fileId})。サーバーが再起動したか、ファイルが削除された可能性があります。再度アップロードしてください。`);
+      }
+
+      console.log(`File found. Creating stream for OpenAI upload...`);
+      const fileStream = fs.createReadStream(filePath);
+
+      try {
+        const openaiFile = await openai.files.create({
+          file: fileStream,
+          purpose: 'assistants',
+        });
+        fileUploadId = openaiFile.id;
+        console.log(`File successfully uploaded to OpenAI, ID: ${fileUploadId}`);
+      } catch (uploadError) {
+        console.error(`Error uploading file stream to OpenAI from path: ${filePath}`, uploadError);
+        throw new Error('OpenAIへのファイルアップロード中にエラーが発生しました。');
+      }
+    }
+
+    // メッセージ送信オブジェクトの準備
+    const messageData: OpenAI.Beta.Threads.Messages.MessageCreateParams = {
+      role: 'user',
+      content: message,
+    };
+    // OpenAIにアップロードしたファイルIDがあれば追加
+    if (fileUploadId) {
+      messageData.attachments = [{ file_id: fileUploadId, tools: [{ type: 'file_search' }] }];
+      // messageData.file_ids = [fileUploadId]; // 古い形式 (Assistants v1)
+    }
+
+    console.log(`Sending message to thread ${threadId} with attachments: ${fileUploadId ? fileUploadId : 'none'}`);
+
+    // OpenAIにメッセージを送信
+    await openai.beta.threads.messages.create(threadId, messageData);
+
+    console.log(`Creating run for thread ${threadId}`);
+    // アシスタントに実行を指示
+    const run = await openai.beta.threads.runs.create(threadId, {
+      assistant_id: ASSISTANT_ID,
+      // ここで指示を追加・変更できます
+      // instructions: "追加の指示があればここに記述",
+    });
+
+    console.log(`Run created: ${run.id}. Waiting for completion...`);
+    // 実行完了を待つ
+    let runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
+    while (runStatus.status === 'queued' || runStatus.status === 'in_progress') {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1秒待機
+      runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
+      console.log(`Run status: ${runStatus.status}`);
+    }
+
+    if (runStatus.status !== 'completed') {
+      console.error(`Run failed with status: ${runStatus.status}`, runStatus.last_error);
+      throw new Error(`アシスタントの実行に失敗しました。ステータス: ${runStatus.status}`);
+    }
+
+    console.log(`Run completed. Retrieving messages...`);
+    // 完了したらメッセージリストを取得
+    const messages = await openai.beta.threads.messages.list(threadId, {
+        order: 'asc' // 古い順で取得（必要に応じて変更）
+    });
+
+    // 最新のアシスタントの応答を返す (list はページネーションされている可能性あり)
+    // return messages.data.filter(msg => msg.run_id === run.id && msg.role === 'assistant');
+    return messages.data; // とりあえず全メッセージを返す
+
+  } catch (error) {
+    console.error('Error in sendMessageToAssistant:', error);
+    // エラーオブジェクトをそのまま投げるか、メッセージを整形して投げる
+    throw error instanceof Error ? error : new Error('アシスタントへのメッセージ送信中に不明なエラーが発生しました。');
+  }
+};
 

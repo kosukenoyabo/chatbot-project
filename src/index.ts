@@ -2,7 +2,7 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
-import fs from 'fs'; // fsモジュールが必要な場合は残す (uploadsディレクトリ作成など)
+import fs from 'fs'; // fsモジュールをインポート
 import chatRoutes from './routes/chat';
 import uploadRoutes from './routes/upload';
 
@@ -11,9 +11,22 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-// --- uploads ディレクトリの確認・作成 (必要であれば残す) ---
-// const uploadsDirectory = path.resolve(__dirname, '../uploads');
-// ... (ディレクトリ作成処理) ...
+// --- uploads ディレクトリの確認・作成 ---
+// process.cwd() を基準に uploads ディレクトリへのパスを生成
+const projectRoot = process.cwd();
+const uploadsDirectory = path.join(projectRoot, 'uploads');
+console.log(`Checking for uploads directory at: ${uploadsDirectory}`); // パス確認ログ
+if (!fs.existsSync(uploadsDirectory)) {
+  try {
+    fs.mkdirSync(uploadsDirectory, { recursive: true });
+    console.log(`Created uploads directory: ${uploadsDirectory}`);
+  } catch (err) {
+    console.error(`Error creating uploads directory: ${uploadsDirectory}`, err);
+    process.exit(1); // ディレクトリ作成に失敗したら起動を中止
+  }
+} else {
+  console.log(`Uploads directory already exists: ${uploadsDirectory}`);
+}
 
 
 // --- ミドルウェア設定 ---
