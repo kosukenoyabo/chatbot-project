@@ -97,7 +97,7 @@ export default router;
 // curl -X POST http://localhost:3000/api/chat \
 //           -H "Content-Type: application/json" \
 //           -d '{
-//             "threadId": "'"thread_6j0WQaGTy5NgPB3BBsYJECsf"'",
+//             "threadId": "'"thread_LuAkRYwL4nd7tI24OPhavL9Y"'",
 //             "message": "このPDFファイルの概要を教えてください。",
-//             "fileId": "'"file-KakBEAaVTSLyrnqC9qQA9C"'"
-//           }'
+//             "fileId": "'"file-EtP5wpKNjDwGXw5aJMH1iE"'"
+//           }'aaaaaaaa
